@@ -9,4 +9,4 @@ WORKDIR /var/www/html
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "exec php -S 0.0.0.0:${PORT:-8080} -t /var/www/html"]
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "/var/www/html"]
