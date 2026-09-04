@@ -1,10 +1,11 @@
 FROM php:8.2-apache
 
+# Fix Apache MPM conflict (disable event/worker and enable prefork)
+RUN a2dismod mpm_event mpm_worker || true \
+    && a2enmod mpm_prefork rewrite
+
 # Install required PHP extensions for PDO and MySQL
 RUN docker-php-ext-install pdo pdo_mysql mysqli
-
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
 
 # Copy application files to Apache root
 COPY . /var/www/html/
