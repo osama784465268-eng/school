@@ -14,8 +14,11 @@ function checkLogin() {
 }
 
 function getBaseUrl() {
-    // عدّل هذا المسار حسب هيكل مجلداتك
-    return '/school_system/'; // لأن المشروع في مجلد school_system
+    $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (strpos($script_name, '/school_system/') === 0) {
+        return '/school_system/';
+    }
+    return '/';
 }
 
 function showAlerts() {
