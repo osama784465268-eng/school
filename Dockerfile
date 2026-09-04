@@ -1,10 +1,7 @@
 FROM php:8.2-apache
 
-# Set default PORT environment variable for Apache
-ENV PORT 80
-
-# Configure Apache to listen dynamically on ${PORT} assigned by Railway
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
+# Use modern ENV key=value syntax
+ENV PORT=80
 
 # Install required PHP extensions for PDO and MySQL
 RUN docker-php-ext-install pdo pdo_mysql mysqli
@@ -21,4 +18,4 @@ RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+CMD ["sh", "-c", "echo \"export PORT=\\${PORT:-80}\" >> /etc/apache2/envvars && sed -i \"s/Listen .*/Listen \\${PORT}/\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:.*/<VirtualHost \\*:\\${PORT}>/\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]
