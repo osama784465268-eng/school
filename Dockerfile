@@ -1,21 +1,24 @@
 FROM php:8.2-apache
 
-# Install MariaDB server and PHP extensions for internal database execution
-RUN apt-get update && apt-get install -y mariadb-server mariadb-client \
-    && docker-php-ext-install pdo pdo_mysql mysqli \
-    && rm -rf /var/lib/apt/lists/*
+# Set default PORT environment variable for Apache
+ENV PORT 80
 
-# Fix Apache MPM conflict by forcing prefork exclusively
-RUN rm -rf /etc/apache2/mods-enabled/mpm_* \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/ \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/ \
-    && a2enmod rewrite
+# Configure Apache to listen dynamically on ${PORT} assigned by Railway
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
 
-# Copy application code
+# Install required PHP extensions for PDO and MySQL
+RUN docker-php-ext-install pdo pdo_mysql mysqli
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Copy application files to Apache root
 COPY . /var/www/html/
+
+# Set permissions and working directory
 WORKDIR /var/www/html
 RUN chown -R www-data:www-data /var/www/html
 
-EXPOSE 8080
+EXPOSE 80
 
-CMD ["sh", "-c", "service mariadb start && mysql -u root -e 'CREATE DATABASE IF NOT EXISTS school_db;' && mysql -u root school_db < /var/www/html/database/school_db.sql 2>/dev/null || true && PORT=${PORT:-8080} && sed -i \"s/Listen [0-9]*/Listen $PORT/\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:[0-9]*>/<VirtualHost \\*:$PORT>/\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]
+CMD ["apache2-foreground"]
